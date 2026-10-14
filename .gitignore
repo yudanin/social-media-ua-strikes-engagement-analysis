@@ -1,0 +1,5 @@
+data/engagement.db
+data/tg.session
+.env
+.venv/
+__pycache__/

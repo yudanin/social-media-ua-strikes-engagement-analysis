@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strike Engagement Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F3EF;--card:#FFFFFF;--ink:#1B1D21;--muted:#4A4E56;--faint:#5A5E66;--line:#D9D7D0;--grid:#E4E2DC;--treat:#2F5DA8;--ctrl:#B85F17;--treat-bg:#E3EAF5;--ctrl-bg:#F6E6D8;--treat-ink:#1F4280;--ctrl-ink:#7A3C0C}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:40px 16px 64px;display:flex;flex-direction:column;gap:28px}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px;border-bottom:2px solid var(--ink);padding-bottom:20px}
+h1{margin:0;font-family:'IBM Plex Serif',serif;font-weight:600;font-size:clamp(26px,4vw,36px);line-height:1.15}
+h2{margin:0;font-size:18px;font-weight:600}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.sub{font-size:15px;color:var(--muted)}
+.strikes div{display:flex;gap:10px;align-items:center;font-size:13px}
+.dash{display:inline-block;width:22px;border-top:2px dashed var(--ink)}
+.banner{background:#FBEFD9;border:1px solid #D9A441;color:#5C3D05;border-radius:8px;padding:12px 16px;font-size:14px}
+.controls{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font:inherit;font-size:14px;min-height:44px;padding:10px 16px;border-radius:999px;cursor:pointer;border:1px solid #B9B7B0;background:#fff;color:var(--ink)}
+.pill[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+label.sel{display:flex;gap:8px;align-items:center;font-size:14px}
+select{font:inherit;font-size:14px;padding:10px 12px;border:1px solid #B9B7B0;border-radius:6px;background:#fff;min-height:44px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px}
+.tile{display:flex;flex-direction:column;gap:8px}
+.tile .k{font-size:13px;color:var(--muted)}
+.tile .v{font-size:34px;font-weight:500}
+.tile .n{font-size:12px;color:var(--faint)}
+.panel{display:flex;flex-direction:column;gap:16px;padding:24px}
+.row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:baseline}
+.legend{display:flex;gap:18px;font-size:13px;flex-wrap:wrap}
+.legend span{display:flex;gap:8px;align-items:center}
+.sw{display:inline-block;width:20px;height:3px}
+.scroll{overflow-x:auto}
+svg text{font-family:'IBM Plex Mono',ui-monospace,monospace}
+.note{margin:0;font-size:13px;color:var(--muted)}
+.grid-acc{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.acc{padding:16px;display:flex;flex-direction:column;gap:10px}
+.acc .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.acc .nm{font-weight:600;font-size:15px}
+.acc .pl{font-size:12px;color:var(--faint)}
+.badge{font-size:11px;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.badge.treatment{background:var(--treat-bg);color:var(--treat-ink)}
+.badge.control{background:var(--ctrl-bg);color:var(--ctrl-ink)}
+.acc .ft{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.two{display:flex;flex-wrap:wrap;gap:16px}
+.two>.card{flex:1 1 460px;min-width:0}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:440px}
+th{text-align:left;font-weight:600;padding:8px;border-bottom:1px solid var(--ink)}
+td{padding:10px 8px;border-bottom:1px solid var(--grid)}
+td.num,th.num{text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace}
+footer{border-top:1px solid #B9B7B0;padding-top:16px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const DATA = /*__DATA__*/null;
+const app = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtPct = v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + '%';
+const fmtInt = v => v == null ? '—' : Number(v).toLocaleString('en-US');
+const fmtDay = iso => { const d = new Date(iso + 'T00:00:00Z'); return d.getUTCDate() + ' ' + d.toLocaleString('en-GB', {month: 'short', timeZone: 'UTC'}); };
+
+if (!DATA) {
+  app.innerHTML = '<div class="card empty">No data embedded. Run <span class="mono">python analyze.py</span> to build this page.</div>';
+} else {
+  const M = DATA.meta;
+  const avail = Object.keys(DATA.views);
+  const state = { platform: 'all', metric: 'likes' };
+  if (!avail.includes('all|likes') && avail.length) { [state.platform, state.metric] = avail[0].split('|'); }
+
+  function render() {
+    const key = state.platform + '|' + state.metric;
+    const V = DATA.views[key];
+    const plats = ['all', 'x', 'telegram', 'youtube', 'truthsocial'].filter(p => avail.some(k => k.startsWith(p + '|')));
+    const metrics = ['likes', 'views', 'replies', 'reposts'].filter(m => avail.includes(state.platform + '|' + m));
+
+    app.innerHTML = `
+      <header>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1 1 520px;min-width:0">
+          <div class="eyebrow mono">Generated ${esc(M.generated_at)}</div>
+          <h1>Engagement around the Yandex datacentre strikes</h1>
+          <div class="sub">Political accounts vs. controls · ${fmtDay(M.start)} – ${fmtDay(M.end)} ${M.end.slice(0,4)} · indexed to each account's ${fmtDay(M.start)}–${fmtDay(M.baseline_end)} median</div>
+        </div>
+        <div class="strikes mono" style="display:flex;flex-direction:column;gap:6px">
+          ${M.strikes.map(s => `<div><span class="dash"></span>${esc(s.label)} · ${fmtDay(s.date)} · ${esc(s.place)}</div>`).join('')}
+        </div>
+      </header>
+      ${M.synthetic ? '<div class="banner"><strong>Synthetic data.</strong> This page was built from the fake-data generator to test the pipeline. None of these numbers describe real accounts.</div>' : ''}
+      <section class="controls">
+        <div class="pills" role="group" aria-label="Platform">
+          ${plats.map(p => `<button type="button" class="pill" data-p="${p}" aria-pressed="${p === state.platform}">${esc(M.platform_labels[p])}</button>`).join('')}
+        </div>
+        <label class="sel">Metric
+          <select id="metric">${metrics.map(m => `<option value="${m}" ${m === state.metric ? 'selected' : ''}>${esc(M.metric_labels[m])}</option>`).join('')}</select>
+        </label>
+      </section>
+      ${V ? body(V) : '<div class="card empty">No units have this metric on this platform.</div>'}
+      <footer>
+        <div><strong style="color:var(--ink)">Method:</strong> unit = one account on one platform. Daily value = median per-post ${esc(M.metric_labels[state.metric].toLowerCase())} (UTC days); index = daily ÷ baseline median × 100. Change = geometric mean after S1 vs. before, averaged over units; 95% CI by bootstrapping units. Chart lines are the median index across units.</div>
+        <div><strong style="color:var(--ink)">Counts:</strong> ${M.settings.at_age != null ? `read at post age ≥ ${M.settings.at_age}h` : `latest snapshot, posts younger than ${M.settings.min_age_hours}h at scrape excluded`}; replies ${M.settings.include_replies ? 'included' : 'excluded'}. Counts scraped after the fact are cumulative: posts from ~5–7 Oct straddle the strikes.</div>
+        <div>Strike dates: Al Jazeera, Computing, LIGA.net reporting, 8–11 Oct 2026.</div>
+      </footer>`;
+
+    app.querySelectorAll('.pill').forEach(b => b.onclick = () => {
+      state.platform = b.dataset.p;
+      if (!avail.includes(state.platform + '|' + state.metric)) state.metric = avail.find(k => k.startsWith(state.platform + '|')).split('|')[1];
+      render();
+    });
+    const sel = document.getElementById('metric');
+    if (sel) sel.onchange = e => { state.metric = e.target.value; render(); };
+  }
+
+  function body(V) {
+    const t = V.tiles;
+    const units = DATA.units.filter(u => u.idx[state.metric] && (state.platform === 'all' || u.platform === state.platform))
+      .sort((a, b) => (a.group === b.group ? a.name.localeCompare(b.name) : a.group === 'treatment' ? -1 : 1));
+    return `
+      <section class="tiles">
+        ${tile('Treatment accounts, after S1 vs. baseline', fmtPct(t.treat), `${t.unitsT} account×platform units`, 'var(--treat)')}
+        ${tile('Control accounts, after S1 vs. baseline', fmtPct(t.ctrl), `${t.unitsC} account×platform units`, 'var(--ctrl)')}
+        ${tile('Difference-in-differences', fmtPct(t.did), t.ci_lo == null ? 'CI needs ≥ 2 units per group' : `95% CI ${fmtPct(t.ci_lo)} to ${fmtPct(t.ci_hi)}`, 'var(--ink)')}
+        ${tile('Posts analysed', fmtInt(t.posts), M.platform_labels[state.platform] + ' · ' + M.metric_labels[state.metric], 'var(--ink)')}
+      </section>
+      <section class="card panel">
+        <div class="row">
+          <h2>Daily engagement index (baseline = 100)</h2>
+          <div class="legend"><span><span class="sw" style="background:var(--treat)"></span>Treatment (median)</span><span><span class="sw" style="background:var(--ctrl)"></span>Control (median)</span></div>
+        </div>
+        <div class="scroll">${chart(V)}</div>
+        <p class="note">Shaded band: from S1 to window end. A bot-driven effect should show as steps at each strike in treatment that are absent in controls.</p>
+      </section>
+      <div class="two">
+        <section class="card panel">
+          <h2>Step pattern by period</h2>
+          <div class="scroll"><table>
+            <thead><tr><th>Period</th><th class="num">Treatment</th><th class="num">Control</th><th class="num">Gap</th></tr></thead>
+            <tbody>${V.segments.map(s => `<tr><td>${esc(s.label)}</td><td class="num">${fmtPct(s.treat)}</td><td class="num">${fmtPct(s.ctrl)}</td><td class="num">${s.treat == null || s.ctrl == null ? '—' : fmtPct(((1 + s.treat / 100) / (1 + s.ctrl / 100) - 1) * 100)}</td></tr>`).join('')}</tbody>
+          </table></div>
+          <p class="note">Geometric-mean index per period relative to 100, averaged over units.</p>
+        </section>
+        <section class="card panel">
+          <h2>Collection status</h2>
+          <div class="scroll"><table>
+            <thead><tr><th>Platform</th><th class="num">Units</th><th class="num">Posts</th><th class="num">Too young</th><th>Last run</th></tr></thead>
+            <tbody>${DATA.coverage.map(c => `<tr><td>${esc(c.platform)}</td><td class="num">${c.with_data}/${c.configured}</td><td class="num">${fmtInt(c.posts)}</td><td class="num">${fmtInt(c.too_young)}</td><td class="mono" style="font-size:12px">${esc(c.last_run ?? 'never')}</td></tr>`).join('')}</tbody>
+          </table></div>
+          <p class="note">Units = accounts with a usable baseline / accounts configured. "Too young" posts had under ${M.settings.min_age_hours}h of engagement when scraped.</p>
+        </section>
+      </div>
+      <section style="display:flex;flex-direction:column;gap:14px">
+        <div class="row"><h2>By account</h2><div class="note">Δ = change after S1 vs. baseline · ${units.length} units</div></div>
+        <div class="grid-acc">${units.map(card).join('')}</div>
+      </section>`;
+  }
+
+  function tile(k, v, n, color) {
+    return `<div class="card tile"><div class="k">${esc(k)}</div><div class="v mono" style="color:${color}">${esc(v)}</div><div class="n">${esc(n)}</div></div>`;
+  }
+
+  function linePath(vals, x, y) {
+    let d = '', pen = false;
+    vals.forEach((v, i) => {
+      if (v == null) { pen = false; return; }
+      d += (pen ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1);
+      pen = true;
+    });
+    return d;
+  }
+
+  function chart(V) {
+    const n = M.dates.length, W = 1000, H = 320, L = 48, R = 980, T = 30, B = 270;
+    const all = V.treat.concat(V.ctrl).filter(v => v != null).concat([100]);
+    let lo = Math.min(...all), hi = Math.max(...all);
+    const pad = Math.max(5, (hi - lo) * 0.1); lo = Math.max(0, lo - pad); hi = hi + pad;
+    const x = i => L + i * (R - L) / (n - 1);
+    const y = v => B - (v - lo) / (hi - lo) * (B - T);
+    const step = Math.pow(10, Math.floor(Math.log10((hi - lo) / 3)));
+    const unit = [1, 2, 5, 10].map(m => m * step).find(s => (hi - lo) / s <= 6);
+    const ticks = []; for (let v = Math.ceil(lo / unit) * unit; v <= hi; v += unit) ticks.push(v);
+    const s1 = M.strikes[0].i;
+    const xt = M.dates.map((d, i) => i).filter(i => i % 7 === 0 || i === n - 1);
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:640px;height:auto;display:block" role="img" aria-label="Daily engagement index, treatment vs control, with strike markers">
+      ${ticks.map(v => `<line x1="${L}" x2="${R}" y1="${y(v)}" y2="${y(v)}" stroke="${v === 100 ? '#9A988F' : 'var(--grid)'}" stroke-width="1"/><text x="${L - 8}" y="${y(v) + 4}" font-size="11" text-anchor="end" fill="var(--faint)">${v}</text>`).join('')}
+      ${s1 != null ? `<rect x="${x(s1)}" y="${T}" width="${x(n - 1) - x(s1)}" height="${B - T}" fill="#1B1D21" opacity="0.04"/>` : ''}
+      ${M.strikes.filter(s => s.i != null).map(s => `<line x1="${x(s.i)}" x2="${x(s.i)}" y1="${T - 6}" y2="${B}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="${x(s.i)}" y="${T - 12}" font-size="11" text-anchor="middle" fill="var(--ink)">${esc(s.label)}</text>`).join('')}
+      <path d="${linePath(V.ctrl, x, y)}" fill="none" stroke="var(--ctrl)" stroke-width="2.25" stroke-linejoin="round"/>
+      <path d="${linePath(V.treat, x, y)}" fill="none" stroke="var(--treat)" stroke-width="2.25" stroke-linejoin="round"/>
+      ${V.treat.map((v, i) => v == null ? '' : `<circle cx="${x(i)}" cy="${y(v)}" r="2.5" fill="var(--treat)"/>`).join('')}
+      ${V.ctrl.map((v, i) => v == null ? '' : `<circle cx="${x(i)}" cy="${y(v)}" r="2.5" fill="var(--ctrl)"/>`).join('')}
+      ${xt.map(i => `<text x="${x(i)}" y="${B + 22}" font-size="11" text-anchor="middle" fill="var(--faint)">${fmtDay(M.dates[i])}</text>`).join('')}
+      ${M.dates.map((d, i) => `<rect x="${x(i) - (R - L) / (n - 1) / 2}" y="${T}" width="${(R - L) / (n - 1)}" height="${B - T}" fill="transparent"><title>${fmtDay(d)} — treatment ${V.treat[i] ?? '—'} (n=${V.nT[i]}), control ${V.ctrl[i] ?? '—'} (n=${V.nC[i]})</title></rect>`).join('')}
+    </svg>`;
+  }
+
+  function card(u) {
+    const vals = u.idx[state.metric], n = vals.length;
+    const nn = vals.filter(v => v != null);
+    let lo = Math.min(50, ...nn), hi = Math.max(150, ...nn);
+    hi = Math.min(hi, 400);
+    const x = i => 4 + i * 192 / (n - 1);
+    const y = v => 40 - (Math.min(v, hi) - lo) / (hi - lo) * 36;
+    const color = u.group === 'treatment' ? 'var(--treat)' : 'var(--ctrl)';
+    return `<div class="card acc">
+      <div class="top"><div style="min-width:0"><div class="nm">${esc(u.name)}</div><div class="pl">${esc(M.platform_labels[u.platform])}</div></div><span class="badge ${u.group}">${u.group === 'treatment' ? 'Treatment' : 'Control'}</span></div>
+      <svg viewBox="0 0 200 44" style="width:100%;height:44px;display:block" role="img" aria-label="${esc(u.name)} daily index sparkline">
+        <line x1="4" x2="196" y1="${y(100)}" y2="${y(100)}" stroke="var(--grid)" stroke-width="1"/>
+        ${M.strikes.filter(s => s.i != null).map(s => `<line x1="${x(s.i)}" x2="${x(s.i)}" y1="2" y2="42" stroke="#9A988F" stroke-width="1" stroke-dasharray="3 3"/>`).join('')}
+        <path d="${linePath(vals, x, y)}" fill="none" stroke="${color}" stroke-width="1.75"/>
+      </svg>
+      <div class="ft mono"><span>Δ ${fmtPct(u.delta[state.metric])}</span><span>posts ${fmtInt(u.posts)}</span></div>
+    </div>`;
+  }
+
+  render();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+# Study configuration: window, strikes, and the accounts to collect.
+# Leave a platform field empty ("") to skip that platform for an account.
+# Handles marked "verify" are best guesses — check them before collecting.
+
+[window]
+start = "2026-09-15"          # inclusive, UTC
+end = "2026-10-13"            # inclusive, UTC
+baseline_end = "2026-10-06"   # baseline = start .. baseline_end
+
+[[strikes]]
+date = "2026-10-07"
+label = "S1"
+place = "Sasovo (Ryazan)"
+
+[[strikes]]
+date = "2026-10-09"
+label = "S2"
+place = "Kaluga"
+
+[[strikes]]
+date = "2026-10-11"
+label = "S3"
+place = "Vladimir"
+
+# ---------- treatment ----------
+[[accounts]]
+key = "afd"
+name = "AfD"
+group = "treatment"
+x = "AfD"
+telegram = ""        # channel username, verify
+youtube = ""         # channel handle incl. @, verify
+truthsocial = ""
+
+[[accounts]]
+key = "weidel"
+name = "Alice Weidel"
+group = "treatment"
+x = "Alice_Weidel"
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+[[accounts]]
+key = "chrupalla"
+name = "Tino Chrupalla"
+group = "treatment"
+x = "Tino_Chrupalla"
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+[[accounts]]
+key = "trump"
+name = "Donald Trump"
+group = "treatment"
+x = "realDonaldTrump"
+telegram = ""
+youtube = ""
+truthsocial = "realDonaldTrump"
+
+[[accounts]]
+key = "gop"
+name = "GOP"
+group = "treatment"
+x = "GOP"
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+[[accounts]]
+key = "musk"
+name = "Elon Musk"
+group = "treatment"
+x = "elonmusk"
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+[[accounts]]
+key = "reform"
+name = "Reform UK"
+group = "treatment"
+x = "reformparty_uk"   # verify
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+[[accounts]]
+key = "farage"
+name = "Nigel Farage"
+group = "treatment"
+x = "Nigel_Farage"
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+# ---------- control ----------
+[[accounts]]
+key = "cdu"
+name = "CDU"
+group = "control"
+x = "CDU"
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+[[accounts]]
+key = "spd"
+name = "SPD"
+group = "control"
+x = "spdde"
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+[[accounts]]
+key = "labour"
+name = "Labour"
+group = "control"
+x = "UKLabour"
+telegram = ""
+youtube = ""
+truthsocial = ""
+
+[[accounts]]
+key = "zelensky"
+name = "Volodymyr Zelensky"
+group = "control"
+x = "ZelenskyyUa"
+telegram = ""        # V_Zelenskiy_official, verify
+youtube = ""
+truthsocial = ""
